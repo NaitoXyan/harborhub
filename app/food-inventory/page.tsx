@@ -23,6 +23,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
+interface IngredientItemProps {
+  item: {
+    name: string; // Include name property here
+    level: number;
+    capacity: number;
+    unit: string;
+    lastUpdated: string;
+    expiry?: string;
+  };
+}
+
 // Placeholder data for ingredient categories and items
 const ingredientData = [
   {
@@ -306,9 +317,12 @@ export default function DishIngredientsPage() {
   )
 }
 
-function IngredientItem({ item }) {
-  const percentage = (item.level / item.capacity) * 100
-  const status = percentage > 25 ? "normal" : "low"
+function IngredientItem({ item }: IngredientItemProps) {
+  const percentage = (item.level / item.capacity) * 100;
+  const status = percentage > 25 ? "normal" : "low";
+
+  // Check for expiry warning (item.expiry)
+  const isExpiringSoon = item.expiry && new Date(item.expiry) <= new Date(new Date().setDate(new Date().getDate() + 7)); // Expiring within 7 days
 
   // Determine color based on percentage
   let progressColor = "bg-emerald-500"
@@ -333,7 +347,10 @@ function IngredientItem({ item }) {
       <div className="text-xl font-bold text-slate-900">
         {item.level} <span className="text-slate-500 text-sm font-normal">{item.unit}</span>
       </div>
-      <Progress value={percentage} className={`h-1.5 mt-2 ${progressBg}`} indicatorClassName={progressColor} />
+
+      {/* Corrected Progress bar */}
+      <Progress value={percentage} className={`h-1.5 mt-2 ${progressBg}`} />
+      
       <div className="flex justify-between mt-1 text-xs text-slate-500">
         <span>0 {item.unit}</span>
         <span>
@@ -344,6 +361,13 @@ function IngredientItem({ item }) {
         <span>Updated {item.lastUpdated}</span>
         <span>{percentage.toFixed(0)}%</span>
       </div>
+
+      {/* Expiry Alert */}
+      {isExpiringSoon && (
+        <div className="mt-2 text-xs text-red-500 flex justify-between">
+          <span>Expiring soon: {item.expiry}</span>
+        </div>
+      )}
     </div>
-  )
+  );
 }
