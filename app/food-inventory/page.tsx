@@ -1,9 +1,10 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  Check,
   Clock,
   Filter,
   Lightbulb,
@@ -11,21 +12,54 @@ import {
   RefreshCw,
   Search,
   Ship,
-  ShoppingCart,
   Utensils,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress"; // Import Progress from shared component
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import type { ChangeEvent, FormEvent } from "react";
 
 interface IngredientItemProps {
   item: {
-    name: string; // Include name property here
+    name: string;
     level: number;
     capacity: number;
     unit: string;
@@ -80,7 +114,7 @@ const ingredientData = [
       { name: "Cooking Oil", level: 15, capacity: 25, unit: "L", lastUpdated: "1 week ago" },
     ],
   },
-]
+];
 
 // Placeholder data for suggested viands
 const suggestedViands = [
@@ -89,41 +123,94 @@ const suggestedViands = [
     ingredients: ["Chicken", "Soy Sauce", "Vinegar", "Garlic", "Bay Leaves", "Peppercorns"],
     difficulty: "Easy",
     prepTime: "45 mins",
-    image: "/placeholder.svg?height=100&width=150",
+    image: "/adobo.jpeg?height=100&width=150",
   },
   {
     name: "Sinigang na Baboy",
     ingredients: ["Pork Belly", "Tamarind", "Tomatoes", "Onions", "String Beans", "Eggplant"],
     difficulty: "Medium",
     prepTime: "60 mins",
-    image: "/placeholder.svg?height=100&width=150",
+    image: "/pork.jpg?height=100&width=150",
   },
   {
     name: "Ginataang Kalabasa",
     ingredients: ["Squash", "Coconut Milk", "String Beans", "Shrimp", "Onions", "Garlic"],
     difficulty: "Easy",
     prepTime: "30 mins",
-    image: "/placeholder.svg?height=100&width=150",
+    image: "/ginata.jpeg?height=100&width=150",
   },
-]
+];
 
 export default function DishIngredientsPage() {
-  const router = useRouter()
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    category: "",
+    quantity: "",
+    unit: "kg",
+    capacity: "",
+    expiryDate: "",
+    supplier: "",
+    storageLocation: "",
+  });
 
   // Filter ingredients based on search query and selected category
   const filteredIngredients = ingredientData.filter((category) => {
     if (selectedCategory !== "all" && category.category.toLowerCase() !== selectedCategory) {
-      return false
+      return false;
     }
 
     if (searchQuery) {
-      return category.items.some((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      return category.items.some((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
     }
 
-    return true
-  })
+    return true;
+  });
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // In a real app, you would send this data to your backend
+    console.log("Form submitted:", formData);
+
+    // Show success state
+    setIsSuccess(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    // Reset success state when modal is closed
+    setTimeout(() => {
+      setIsSuccess(false);
+      setFormData({
+        name: "",
+        category: "",
+        quantity: "",
+        unit: "kg",
+        capacity: "",
+        expiryDate: "",
+        supplier: "",
+        storageLocation: "",
+      });
+    }, 300);
+  };
+
+  // Generate a random batch ID for the QR code
+  const batchId = `ING-${Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, "0")}`;
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -179,7 +266,7 @@ export default function DishIngredientsPage() {
               <Filter className="h-4 w-4" />
               Filter
             </Button>
-            <Button className="gap-1 bg-slate-900 hover:bg-slate-800">
+            <Button className="gap-1 bg-slate-900 hover:bg-slate-800" onClick={() => setIsModalOpen(true)}>
               <Plus className="h-4 w-4" />
               Add New Ingredient
             </Button>
@@ -287,10 +374,6 @@ export default function DishIngredientsPage() {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-                <Button size="sm" className="gap-1 bg-slate-900 hover:bg-slate-800">
-                  <ShoppingCart className="h-3 w-3" />
-                  Order More
-                </Button>
               </CardFooter>
             </Card>
           ))}
@@ -313,8 +396,216 @@ export default function DishIngredientsPage() {
           </div>
         </div>
       </footer>
+
+      {/* Add Ingredient Modal */}
+      <Dialog open={isModalOpen} onOpenChange={closeModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          {!isSuccess ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Add Ingredient to Inventory</DialogTitle>
+                <DialogDescription>Enter the details of the ingredient being added to the inventory.</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className="text-right">
+                    Ingredient Name
+                  </Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="category" className="text-right">
+                    Category
+                  </Label>
+                  <div className="col-span-3">
+                    <Select
+                      value={formData.category}
+                      onValueChange={(value) => handleSelectChange("category", value)}
+                      required
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Protein">Protein</SelectItem>
+                        <SelectItem value="Vegetables">Vegetables</SelectItem>
+                        <SelectItem value="Sauces & Flavorings">Sauces & Flavorings</SelectItem>
+                        <SelectItem value="Staples">Staples</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="quantity" className="text-right">
+                    Quantity
+                  </Label>
+                  <Input
+                    id="quantity"
+                    name="quantity"
+                    type="number"
+                    min="0.1"
+                    step="0.1"
+                    value={formData.quantity}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="unit" className="text-right">
+                    Unit
+                  </Label>
+                  <div className="col-span-3">
+                    <Select value={formData.unit} onValueChange={(value) => handleSelectChange("unit", value)} required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select unit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="kg">Kilogram (kg)</SelectItem>
+                        <SelectItem value="g">Gram (g)</SelectItem>
+                        <SelectItem value="L">Liter (L)</SelectItem>
+                        <SelectItem value="ml">Milliliter (ml)</SelectItem>
+                        <SelectItem value="pcs">Pieces (pcs)</SelectItem>
+                        <SelectItem value="bunch">Bunch</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="capacity" className="text-right">
+                    Storage Capacity
+                  </Label>
+                  <Input
+                    id="capacity"
+                    name="capacity"
+                    type="number"
+                    min="1"
+                    value={formData.capacity}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="expiryDate" className="text-right">
+                    Expiry Date
+                  </Label>
+                  <Input
+                    id="expiryDate"
+                    name="expiryDate"
+                    type="date"
+                    value={formData.expiryDate}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="supplier" className="text-right">
+                    Supplier
+                  </Label>
+                  <Input
+                    id="supplier"
+                    name="supplier"
+                    value={formData.supplier}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="storageLocation" className="text-right">
+                    Storage Location
+                  </Label>
+                  <Input
+                    id="storageLocation"
+                    name="storageLocation"
+                    value={formData.storageLocation}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                  />
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={closeModal}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="bg-amber-500 hover:bg-amber-600">
+                    Add to Inventory
+                  </Button>
+                </DialogFooter>
+              </form>
+            </>
+          ) : (
+            <div className="py-6 space-y-6">
+              <Alert className="bg-green-50 border-green-200">
+                <Check className="h-4 w-4 text-green-500" />
+                <AlertTitle className="text-green-800">Success!</AlertTitle>
+                <AlertDescription className="text-green-700">
+                  Ingredient has been successfully added to the inventory.
+                </AlertDescription>
+              </Alert>
+
+              <div className="text-center space-y-4">
+                <div className="text-sm text-slate-500">Ingredient Tracking ID: {batchId}</div>
+
+                <div className="flex justify-center">
+                  <div className="border p-4 rounded-lg bg-white">
+                    {/* Simple QR code placeholder */}
+                    <svg
+                      width="150"
+                      height="150"
+                      viewBox="0 0 150 150"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="mx-auto"
+                    >
+                      <rect width="150" height="150" fill="white" />
+                      <g>
+                        {/* This is a simplified QR code pattern */}
+                        <rect x="20" y="20" width="20" height="20" fill="black" />
+                        <rect x="40" y="20" width="20" height="20" fill="black" />
+                        <rect x="60" y="20" width="20" height="20" fill="black" />
+                        <rect x="20" y="40" width="20" height="20" fill="black" />
+                        <rect x="60" y="40" width="20" height="20" fill="black" />
+                        <rect x="20" y="60" width="20" height="20" fill="black" />
+                        <rect x="40" y="60" width="20" height="20" fill="black" />
+                        <rect x="60" y="60" width="20" height="20" fill="black" />
+
+                        <rect x="90" y="20" width="20" height="20" fill="black" />
+                        <rect x="110" y="20" width="20" height="20" fill="black" />
+                        <rect x="90" y="40" width="20" height="20" fill="black" />
+                        <rect x="110" y="60" width="20" height="20" fill="black" />
+
+                        <rect x="20" y="90" width="20" height="20" fill="black" />
+                        <rect x="60" y="90" width="20" height="20" fill="black" />
+                        <rect x="40" y="110" width="20" height="20" fill="black" />
+
+                        <rect x="90" y="90" width="20" height="20" fill="black" />
+                        <rect x="110" y="90" width="20" height="20" fill="black" />
+                        <rect x="90" y="110" width="20" height="20" fill="black" />
+                      </g>
+                    </svg>
+                    <div className="text-xs text-center mt-2 text-slate-500">Scan to track this ingredient</div>
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <Button onClick={closeModal} className="w-full">
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
-  )
+  );
 }
 
 function IngredientItem({ item }: IngredientItemProps) {
@@ -322,18 +613,19 @@ function IngredientItem({ item }: IngredientItemProps) {
   const status = percentage > 25 ? "normal" : "low";
 
   // Check for expiry warning (item.expiry)
-  const isExpiringSoon = item.expiry && new Date(item.expiry) <= new Date(new Date().setDate(new Date().getDate() + 7)); // Expiring within 7 days
+  const isExpiringSoon =
+    item.expiry && new Date(item.expiry) <= new Date(new Date().setDate(new Date().getDate() + 7)); // Expiring within 7 days
 
   // Determine color based on percentage
-  let progressColor = "bg-emerald-500"
-  let progressBg = "bg-emerald-100"
+  let progressColor = "bg-emerald-500";
+  let progressBg = "bg-emerald-100";
 
   if (percentage <= 25) {
-    progressColor = "bg-rose-500"
-    progressBg = "bg-rose-100"
+    progressColor = "bg-rose-500";
+    progressBg = "bg-rose-100";
   } else if (percentage <= 50) {
-    progressColor = "bg-amber-500"
-    progressBg = "bg-amber-100"
+    progressColor = "bg-amber-500";
+    progressBg = "bg-amber-100";
   }
 
   return (
@@ -348,9 +640,8 @@ function IngredientItem({ item }: IngredientItemProps) {
         {item.level} <span className="text-slate-500 text-sm font-normal">{item.unit}</span>
       </div>
 
-      {/* Corrected Progress bar */}
-      <Progress value={percentage} className={`h-1.5 mt-2 ${progressBg}`} />
-      
+      <Progress value={percentage} className={`h-1.5 mt-2 ${progressBg}`} indicatorClassName={progressColor} />
+
       <div className="flex justify-between mt-1 text-xs text-slate-500">
         <span>0 {item.unit}</span>
         <span>
